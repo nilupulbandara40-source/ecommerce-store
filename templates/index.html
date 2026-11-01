@@ -1,1 +1,704 @@
-{% extends 'base.html' %}{% block title %}Shop · NovaCart{% endblock %}{% block content %}<section class="hero"><div><p class="eyebrow">EVERYDAY FINDS, MADE SIMPLE</p><h1>Good products.<br><span>Better everyday.</span></h1><p>Explore useful essentials for your lifestyle, study and home.</p><a class="btn" href="#products">Explore products ↓</a></div><div class="hero-art"><div class="orb">N<span>.</span></div><div class="float-card">✦ Curated essentials<br><small>Simple · Useful · Reliable</small></div></div></section><section id="products"><div class="section-head"><div><p class="eyebrow">THE COLLECTION</p><h2>Shop products</h2></div><span class="muted">{{ products|length }} item(s)</span></div><form class="filters" method="get"><input name="q" value="{{ q }}" placeholder="Search products…" aria-label="Search products"><select name="category"><option value="">All categories</option>{% for c in categories %}<option value="{{ c }}" {% if selected_category==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select><select name="sort"><option value="newest" {% if sort=='newest' %}selected{% endif %}>Newest</option><option value="price_asc" {% if sort=='price_asc' %}selected{% endif %}>Price: low to high</option><option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Price: high to low</option><option value="name" {% if sort=='name' %}selected{% endif %}>Name A–Z</option></select><button class="btn" type="submit">Apply</button><a class="btn btn-light" href="{{ url_for('index') }}">Reset</a></form><div class="product-grid">{% for p in products %}<article class="product-card"><a class="product-visual" href="{{ url_for('product_detail',product_id=p.id) }}">{% if p.image_url %}<img src="{{ p.image_url }}" alt="{{ p.name }}">{% else %}<span class="product-symbol">{% if p.category=='Electronics' %}⌁{% elif p.category=='Accessories' %}▱{% else %}✧{% endif %}</span>{% endif %}<span class="category-pill">{{ p.category }}</span></a><div class="product-info"><a class="product-name" href="{{ url_for('product_detail',product_id=p.id) }}">{{ p.name }}</a><p class="muted description">{{ p.description }}</p><div class="product-bottom"><strong>Rs. {{ '%.2f'|format(p.price) }}</strong><span class="stock {% if p.stock==0 %}out{% endif %}">{{ p.stock }} in stock</span></div><form method="post" action="{{ url_for('add_to_cart',product_id=p.id) }}"><input type="hidden" name="quantity" value="1"><button class="btn btn-full" {% if p.stock==0 %}disabled{% endif %}>Add to cart +</button></form></div></article>{% else %}<div class="empty"><h3>No products found</h3><p>Try another search or reset the filters.</p></div>{% endfor %}</div></section>{% endblock %}
+
+{% extends 'base.html' %}
+
+{% block title %}Discover Premium Essentials | NovaCart{% endblock %}
+
+{% block extra_head %}
+<style>
+/* LUXURY HOMEPAGE */
+
+.luxury-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.1fr .9fr;
+    align-items: center;
+    gap: 35px;
+    min-height: 450px;
+    padding: 65px 7%;
+    margin: 35px 0 65px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: linear-gradient(125deg, #123d2c, #205b41 65%, #347858);
+    color: #fff;
+    box-shadow: 0 25px 60px rgba(18,61,44,.17);
+}
+
+.luxury-hero::before {
+    content: "";
+    position: absolute;
+    width: 380px;
+    height: 380px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 50%;
+    right: 7%;
+    top: 5%;
+}
+
+.luxury-hero::after {
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    border: 1px solid rgba(216,187,130,.25);
+    border-radius: 50%;
+    right: 12%;
+    top: 15%;
+}
+
+.luxury-hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.luxury-label {
+    color: #d8bb82;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.luxury-hero h1 {
+    color: #fff;
+    font-family: Manrope, sans-serif;
+    font-size: clamp(38px,5vw,65px);
+    line-height: 1.08;
+    letter-spacing: -2.5px;
+    margin: 0 0 22px;
+}
+
+.luxury-hero h1 span {
+    color: #d8bb82;
+}
+
+.luxury-hero-content > p:not(.luxury-label) {
+    max-width: 450px;
+    color: #d8e5dc;
+    font-size: 15px;
+    line-height: 1.9;
+    margin-bottom: 30px;
+}
+
+.luxury-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 25px;
+    background: #d8bb82;
+    color: #123d2c;
+    font-weight: 800;
+    font-size: 13px;
+    border-radius: 4px;
+    transition: .3s ease;
+}
+
+.luxury-cta:hover {
+    background: #fff;
+    color: #123d2c;
+    transform: translateY(-4px);
+}
+
+.luxury-hero-art {
+    min-height: 300px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    z-index: 1;
+}
+
+.luxury-emblem {
+    width: 230px;
+    height: 230px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(145deg,#d8bb82,#a98a53);
+    color: #123d2c;
+    font: 800 125px Manrope,sans-serif;
+    box-shadow: 0 25px 65px rgba(0,0,0,.2);
+    animation: luxuryFloat 5s ease-in-out infinite;
+}
+
+.luxury-emblem span { color: #fff; }
+
+.luxury-floating-note {
+    position: absolute;
+    bottom: 15px;
+    right: -5px;
+    padding: 17px 22px;
+    background: #fff;
+    color: #123d2c;
+    border-left: 3px solid #d8bb82;
+    box-shadow: 0 12px 35px rgba(0,0,0,.15);
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.luxury-floating-note small {
+    display: block;
+    color: #78847b;
+    font-weight: 400;
+    margin-top: 5px;
+}
+
+.luxury-benefits {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 15px;
+    margin: -25px 0 65px;
+}
+
+.luxury-benefit {
+    background: #fff;
+    border: 1px solid #e8e2d5;
+    padding: 20px 15px;
+    text-align: center;
+    transition: .25s ease;
+}
+
+.luxury-benefit:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(18,61,44,.08);
+}
+
+.luxury-benefit strong {
+    display: block;
+    color: #123d2c;
+    font: 700 14px Manrope,sans-serif;
+}
+
+.luxury-benefit small {
+    color: #858b83;
+    font-size: 11px;
+}
+
+.luxury-icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.luxury-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.luxury-heading .eyebrow {
+    color: #a1844e;
+    letter-spacing: 3px;
+}
+
+.luxury-heading h2 {
+    color: #123d2c;
+    font: 800 32px Manrope,sans-serif;
+    margin: 0;
+    letter-spacing: -1px;
+}
+
+.luxury-count {
+    color: #7d897f;
+    font-size: 12px;
+}
+
+.luxury-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 25px 0 30px;
+}
+
+.luxury-filters input,
+.luxury-filters select {
+    border-radius: 3px;
+    border-color: #e5e0d5;
+    min-height: 47px;
+}
+
+.luxury-filters input {
+    flex: 1;
+    min-width: 190px;
+}
+
+.luxury-filters .btn {
+    border-radius: 3px;
+    background: #123d2c;
+}
+
+.luxury-filters .btn-light {
+    background: #fff;
+    color: #123d2c;
+}
+
+.luxury-products {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 22px;
+}
+
+.luxury-product {
+    background: #fff;
+    border: 1px solid #eae5da;
+    overflow: hidden;
+    transition: transform .35s ease,box-shadow .35s ease;
+    animation: luxuryReveal .6s ease both;
+}
+
+.luxury-product:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(18,61,44,.11);
+}
+
+.luxury-product-image {
+    height: 220px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    overflow: hidden;
+    background: #f0eee5;
+}
+
+.luxury-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s ease;
+}
+
+.luxury-product:hover .luxury-product-image img {
+    transform: scale(1.08);
+}
+
+.luxury-placeholder {
+    font-size: 85px;
+    color: #a1844e;
+}
+
+.luxury-category {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    background: #123d2c;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.luxury-product-info {
+    padding: 19px;
+}
+
+.luxury-product-name {
+    color: #183d2d;
+    font: 700 15px Manrope,sans-serif;
+}
+
+.luxury-product-info .description {
+    height: 40px;
+    margin: 9px 0;
+}
+
+.luxury-product-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.luxury-price {
+    color: #123d2c;
+    font: 800 18px Manrope,sans-serif;
+}
+
+.luxury-stock {
+    background: #e9f1e9;
+    color: #276344;
+    padding: 5px 8px;
+    font-size: 10px;
+    border-radius: 2px;
+}
+
+.luxury-stock.out {
+    background: #fff0f0;
+    color: #b93838;
+}
+
+.luxury-add {
+    width: 100%;
+    background: #123d2c;
+    color: #fff;
+    border: 0;
+    padding: 13px;
+    font: 700 12px 'DM Sans',sans-serif;
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.luxury-add:hover {
+    background: #b08e53;
+    color: #123d2c;
+}
+
+.luxury-add:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.luxury-product[hidden] {
+    display: none !important;
+}
+
+.luxury-empty {
+    display: none;
+    grid-column: 1/-1;
+    padding: 50px 20px;
+    text-align: center;
+    background: white;
+    color: #718078;
+    border: 1px dashed #d9dfd7;
+}
+
+.luxury-empty.visible { display: block; }
+
+@keyframes luxuryFloat {
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-14px) rotate(3deg); }
+}
+
+@keyframes luxuryReveal {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media(max-width:950px) {
+    .luxury-products { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .luxury-hero { padding: 45px 6%; }
+}
+
+@media(max-width:650px) {
+    .luxury-hero {
+        grid-template-columns: 1fr;
+        padding: 38px 25px;
+        margin-top: 20px;
+        min-height: auto;
+    }
+
+    .luxury-hero h1 { font-size: 42px; }
+    .luxury-hero-art { min-height: 230px; }
+    .luxury-emblem { width: 165px; height: 165px; font-size: 90px; }
+    .luxury-floating-note { right: -5px; bottom: 0; }
+    .luxury-benefits { grid-template-columns: 1fr; margin-top: -20px; }
+    .luxury-heading h2 { font-size: 25px; }
+    .luxury-products { gap: 12px; }
+    .luxury-product-image { height: 145px; }
+    .luxury-product-info { padding: 12px; }
+    .luxury-product-name { font-size: 13px; }
+    .luxury-price { font-size: 15px; }
+    .luxury-product-bottom { align-items: flex-start; flex-direction: column; }
+    .luxury-filters { display: grid; grid-template-columns: 1fr 1fr; }
+    .luxury-filters input { grid-column: 1/-1; min-width: 0; }
+    .luxury-filters select { min-width: 0; width: 100%; }
+}
+
+@media(prefers-reduced-motion:reduce) {
+    .luxury-hero-art *,
+    .luxury-product,
+    .luxury-benefit {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="luxury-hero">
+
+    <div class="luxury-hero-content">
+
+        <p class="luxury-label">THE NOVACART COLLECTION</p>
+
+        <h1>
+            Discover a better way to
+            <span>live everyday.</span>
+        </h1>
+
+        <p>
+            Thoughtfully selected essentials for your lifestyle,
+            study and home. Discover products that make everyday
+            moments more special.
+        </p>
+
+        <a href="#products" class="luxury-cta">
+            EXPLORE COLLECTION <span>→</span>
+        </a>
+
+    </div>
+
+    <div class="luxury-hero-art">
+        <div class="luxury-emblem">N<span>.</span></div>
+
+        <div class="luxury-floating-note">
+            ✦ CURATED ESSENTIALS
+            <small>Simple · Useful · Reliable</small>
+        </div>
+    </div>
+
+</section>
+
+<section class="luxury-benefits">
+
+    <div class="luxury-benefit">
+        <div class="luxury-icon">✦</div>
+        <strong>Curated Essentials</strong>
+        <small>Useful everyday products</small>
+    </div>
+
+    <div class="luxury-benefit">
+        <div class="luxury-icon">◇</div>
+        <strong>Simple Shopping</strong>
+        <small>Easy browsing and ordering</small>
+    </div>
+
+    <div class="luxury-benefit">
+        <div class="luxury-icon">✓</div>
+        <strong>Reliable Experience</strong>
+        <small>Convenient online shopping</small>
+    </div>
+
+</section>
+
+<section id="products">
+
+    <div class="luxury-heading">
+
+        <div>
+            <p class="eyebrow">DISCOVER OUR SELECTION</p>
+            <h2>Shop the collection</h2>
+        </div>
+
+        <span class="luxury-count" id="productCount">
+            {{ products|length }} item(s)
+        </span>
+
+    </div>
+
+    <form class="luxury-filters" method="get" id="productFilters">
+
+        <input
+            type="search"
+            name="q"
+            id="liveSearch"
+            value="{{ q }}"
+            placeholder="Search your favourite products..."
+            aria-label="Search products"
+        >
+
+        <select name="category" aria-label="Filter by category">
+            <option value="">All categories</option>
+
+            {% for c in categories %}
+            <option value="{{ c }}" {% if selected_category == c %}selected{% endif %}>
+                {{ c }}
+            </option>
+            {% endfor %}
+
+        </select>
+
+        <select name="sort" aria-label="Sort products">
+
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>
+                Newest
+            </option>
+
+            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>
+                Price: low to high
+            </option>
+
+            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>
+                Price: high to low
+            </option>
+
+            <option value="name" {% if sort == 'name' %}selected{% endif %}>
+                Name A–Z
+            </option>
+
+        </select>
+
+        <button class="btn" type="submit">Apply Filters</button>
+
+        <a class="btn btn-light" href="{{ url_for('index') }}">
+            Reset
+        </a>
+
+    </form>
+
+    <div class="luxury-products" id="productGrid">
+
+        {% for p in products %}
+
+        <article
+            class="luxury-product"
+            data-name="{{ p.name|lower }}"
+            data-category="{{ p.category|lower }}"
+            data-description="{{ (p.description or '')|lower }}"
+        >
+
+            <a
+                class="luxury-product-image"
+                href="{{ url_for('product_detail', product_id=p.id) }}"
+            >
+
+                {% if p.image_url %}
+
+                <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+
+                {% else %}
+
+                <span class="luxury-placeholder">
+                    {% if p.category == 'Electronics' %}
+                        ⌁
+                    {% elif p.category == 'Accessories' %}
+                        ▱
+                    {% else %}
+                        ✧
+                    {% endif %}
+                </span>
+
+                {% endif %}
+
+                <span class="luxury-category">
+                    {{ p.category }}
+                </span>
+
+            </a>
+
+            <div class="luxury-product-info">
+
+                <a
+                    class="luxury-product-name"
+                    href="{{ url_for('product_detail', product_id=p.id) }}"
+                >
+                    {{ p.name }}
+                </a>
+
+                <p class="muted description">
+                    {{ p.description }}
+                </p>
+
+                <div class="luxury-product-bottom">
+
+                    <strong class="luxury-price">
+                        Rs. {{ '%.2f'|format(p.price) }}
+                    </strong>
+
+                    <span class="luxury-stock {% if p.stock == 0 %}out{% endif %}">
+                        {% if p.stock > 0 %}
+                            {{ p.stock }} IN STOCK
+                        {% else %}
+                            OUT OF STOCK
+                        {% endif %}
+                    </span>
+
+                </div>
+
+                <form
+                    method="post"
+                    action="{{ url_for('add_to_cart', product_id=p.id) }}"
+                >
+
+                    <input type="hidden" name="quantity" value="1">
+
+                    <button
+                        class="luxury-add"
+                        type="submit"
+                        {% if p.stock == 0 %}disabled{% endif %}
+                    >
+                        {% if p.stock > 0 %}
+                            ADD TO CART +
+                        {% else %}
+                            CURRENTLY UNAVAILABLE
+                        {% endif %}
+                    </button>
+
+                </form>
+
+            </div>
+
+        </article>
+
+        {% else %}
+
+        <div class="luxury-empty visible">
+            <h3>No products found</h3>
+            <p>Try another search or reset your filters.</p>
+        </div>
+
+        {% endfor %}
+
+        <div class="luxury-empty" id="liveEmpty">
+            <h3>No matching products</h3>
+            <p>Try another product name or keyword.</p>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const search = document.getElementById('liveSearch');
+    const products = Array.from(
+        document.querySelectorAll('.luxury-product')
+    );
+
+    const count = document.getElementById('productCount');
+    const empty = document.getElementById('liveEmpty');
+
+    if (!search || !count || !empty) return;
+
+    function filterProducts() {
+
+        const term = search.value.trim().toLowerCase();
+        let visible = 0;
+
+        products.forEach(function (product) {
+
+            const name = product.dataset.name || '';
+            const category = product.dataset.category || '';
+            const description = product.dataset.description || '';
+
+            const matches =
+                name.includes(term) ||
+                category.includes(term) ||
+                description.includes(term);
+
+            product.hidden = !matches;
+
+            if (matches) visible++;
+
+        });
+
+        count.textContent = visible + ' item(s)';
+        empty.classList.toggle('visible', visible === 0);
+
+    }
+
+    search.addEventListener('input', filterProducts);
+
+    filterProducts();
+
+});
+</script>
+{% endblock %}
+

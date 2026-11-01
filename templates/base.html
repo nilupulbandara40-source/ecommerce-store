@@ -1,1 +1,296 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}NovaCart Store{% endblock %}</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head><body><header class="topbar"><a class="brand" href="{{ url_for('index') }}">NovaCart<span>.</span></a><nav><a href="{{ url_for('index') }}">Store</a><a href="{{ url_for('cart') }}">Cart <b>{{ cart_count }}</b></a><a href="{{ url_for('admin_products') }}">Manage Products</a><a href="{{ url_for('admin_orders') }}">Orders</a></nav></header><main class="container">{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="messages">{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}{% block content %}{% endblock %}</main><footer>NovaCart E-Commerce Store · Mini Project · EG/2023/5515</footer></body></html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="theme-color" content="#123d2c">
+    <meta name="description" content="NovaCart - Discover premium everyday essentials for your lifestyle, study and home.">
+
+    <title>{% block title %}NovaCart | Premium Store{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .luxury-header {
+            background: #123d2c;
+            color: #fff;
+            padding: 0 6%;
+            min-height: 82px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 5px 25px rgba(0,0,0,.12);
+        }
+
+        .luxury-brand {
+            color: #fff;
+            font-family: Manrope, sans-serif;
+            font-size: 27px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            text-decoration: none;
+        }
+
+        .luxury-brand span {
+            color: #c6a76a;
+        }
+
+        .luxury-nav {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .luxury-nav a {
+            color: #f3f0e8;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color .25s ease;
+        }
+
+        .luxury-nav a:hover {
+            color: #d8bb82;
+        }
+
+        .luxury-cart-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 23px;
+            height: 23px;
+            margin-left: 5px;
+            padding: 0 6px;
+            background: #c6a76a;
+            color: #123d2c;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,.35);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 21px;
+            cursor: pointer;
+        }
+
+        .luxury-main {
+            min-height: calc(100vh - 170px);
+        }
+
+        .luxury-footer {
+            background: #123d2c;
+            color: #e8eee8;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .luxury-footer strong {
+            color: #d8bb82;
+            font-family: Manrope, sans-serif;
+            font-size: 17px;
+        }
+
+        .luxury-footer p {
+            margin: 7px 0 0;
+            color: #c0cec3;
+        }
+
+        .messages {
+            margin: 18px 0;
+        }
+
+        .flash {
+            animation: notificationIn .35s ease both;
+        }
+
+        @keyframes notificationIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .luxury-header {
+                min-height: 72px;
+                padding: 12px 5%;
+                flex-wrap: wrap;
+            }
+
+            .luxury-brand {
+                font-size: 24px;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .luxury-nav {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0;
+                padding: 8px 0 12px;
+            }
+
+            .luxury-nav.open {
+                display: flex;
+            }
+
+            .luxury-nav a {
+                width: 100%;
+                padding: 12px 5px;
+                border-top: 1px solid rgba(255,255,255,.12);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .flash {
+                animation: none;
+            }
+
+            .luxury-nav a {
+                transition: none;
+            }
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+    <header class="luxury-header">
+
+        <a class="luxury-brand" href="{{ url_for('index') }}">
+            NovaCart<span>.</span>
+        </a>
+
+        <button
+            class="nav-toggle"
+            id="navToggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="mainNavigation">
+            ☰
+        </button>
+
+        <nav class="luxury-nav" id="mainNavigation">
+
+            <a href="{{ url_for('index') }}">
+                Store
+            </a>
+
+            <a href="{{ url_for('cart') }}">
+                Cart
+                <span class="luxury-cart-count">{{ cart_count }}</span>
+            </a>
+
+            <a href="{{ url_for('admin_products') }}">
+                Manage Products
+            </a>
+
+            <a href="{{ url_for('admin_orders') }}">
+                Orders
+            </a>
+
+        </nav>
+
+    </header>
+
+    <main class="container luxury-main">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                <div class="messages" aria-live="polite">
+
+                    {% for category, message in messages %}
+
+                        <div class="flash {{ category }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+    <footer class="luxury-footer">
+
+        <strong>NovaCart.</strong>
+
+        <p>Everyday Finds, Made Simple.</p>
+
+        <p>
+            NovaCart E-Commerce Store
+            · Mini Project
+            · EG/2023/5515
+        </p>
+
+        <p>© 2026 NovaCart. All rights reserved.</p>
+
+    </footer>
+
+    <script>
+        // Mobile navigation toggle
+        const navToggle = document.getElementById('navToggle');
+        const mainNavigation = document.getElementById('mainNavigation');
+
+        navToggle.addEventListener('click', function () {
+
+            const isOpen = mainNavigation.classList.toggle('open');
+
+            navToggle.setAttribute('aria-expanded', isOpen);
+            navToggle.setAttribute(
+                'aria-label',
+                isOpen ? 'Close navigation menu' : 'Open navigation menu'
+            );
+
+            navToggle.textContent = isOpen ? '✕' : '☰';
+
+        });
+
+        // Close mobile navigation after selecting a link
+        mainNavigation.querySelectorAll('a').forEach(function (link) {
+
+            link.addEventListener('click', function () {
+                mainNavigation.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.textContent = '☰';
+            });
+
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,1 +1,449 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">YOUR SELECTION</p><h1>Your cart</h1>{% if items %}<form method="post" action="{{ url_for('update_cart') }}"><div class="table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th></tr></thead><tbody>{% for item in items %}<tr><td>{{ item.product.name }}</td><td>Rs. {{ '%.2f'|format(item.product.price) }}</td><td><input class="qty" type="number" name="qty_{{ item.product.id }}" min="0" max="{{ item.product.stock }}" value="{{ item.quantity }}"></td><td>Rs. {{ '%.2f'|format(item.subtotal) }}</td></tr>{% endfor %}</tbody></table></div><div class="cart-actions"><button class="btn btn-light">Update cart</button><h2>Total: Rs. {{ '%.2f'|format(total) }}</h2></div></form><a class="btn" href="{{ url_for('checkout') }}">Proceed to checkout →</a>{% else %}<div class="empty"><h3>Your cart is empty</h3><p>Find something useful in our collection.</p><a class="btn" href="{{ url_for('index') }}">Browse store</a></div>{% endif %}{% endblock %}
+
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart | NovaCart{% endblock %}
+
+{% block extra_head %}
+<style>
+.cart-page {
+    padding: 30px 0 60px;
+}
+
+.cart-heading {
+    margin-bottom: 30px;
+}
+
+.cart-heading .eyebrow {
+    color: #a1844e;
+    letter-spacing: 3px;
+}
+
+.cart-heading h1 {
+    color: #123d2c;
+    font: 800 36px Manrope, sans-serif;
+    margin: 0;
+}
+
+.cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 25px;
+    align-items: start;
+}
+
+.cart-panel {
+    background: white;
+    border: 1px solid #e9e3d8;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.cart-panel-title {
+    padding: 20px 24px;
+    border-bottom: 1px solid #eee9df;
+    color: #123d2c;
+    font: 700 16px Manrope, sans-serif;
+}
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+.cart-table th {
+    background: #f3f2eb;
+    color: #806a41;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 15px;
+}
+
+.cart-table td {
+    padding: 18px 15px;
+    border-bottom: 1px solid #eeeae2;
+    color: #46564c;
+}
+
+.cart-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.cart-product-name {
+    color: #123d2c;
+    font-weight: 700;
+}
+
+.cart-price {
+    color: #123d2c;
+    font-weight: 700;
+}
+
+.cart-quantity {
+    width: 75px;
+    border: 1px solid #e2dfd4;
+    border-radius: 3px;
+    padding: 10px;
+    text-align: center;
+}
+
+.cart-summary {
+    background: #123d2c;
+    color: white;
+    padding: 25px;
+    border-radius: 5px;
+    box-shadow: 0 15px 35px rgba(18,61,44,.12);
+    position: sticky;
+    top: 110px;
+}
+
+.cart-summary h2 {
+    font: 700 20px Manrope, sans-serif;
+    margin: 0 0 20px;
+    color: #fff;
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 13px 0;
+    border-bottom: 1px solid rgba(255,255,255,.15);
+    font-size: 13px;
+    color: #d8e5dc;
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 22px 0;
+    font-weight: 800;
+    color: #e0c48e;
+    font-size: 18px;
+}
+
+.cart-checkout {
+    display: block;
+    text-align: center;
+    padding: 14px;
+    background: #d8bb82;
+    color: #123d2c;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: .25s ease;
+}
+
+.cart-checkout:hover {
+    background: white;
+    transform: translateY(-3px);
+}
+
+.cart-update {
+    margin: 18px;
+}
+
+.cart-update .btn {
+    background: #123d2c;
+    border-radius: 3px;
+}
+
+.cart-continue {
+    display: inline-block;
+    margin-top: 22px;
+    color: #806a41;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.cart-empty {
+    padding: 65px 20px;
+    background: white;
+    border: 1px solid #e9e3d8;
+    text-align: center;
+}
+
+.cart-empty-icon {
+    font-size: 48px;
+    color: #b99a60;
+    margin-bottom: 15px;
+}
+
+.cart-empty h2 {
+    color: #123d2c;
+    font: 800 24px Manrope, sans-serif;
+}
+
+.cart-empty p {
+    color: #718078;
+    margin-bottom: 25px;
+}
+
+.cart-empty .btn {
+    background: #123d2c;
+    border-radius: 3px;
+}
+
+.cart-live-note {
+    color: #d8bb82;
+    font-size: 11px;
+    margin-top: 13px;
+    text-align: center;
+}
+
+@media(max-width:850px) {
+    .cart-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cart-summary {
+        position: static;
+    }
+}
+
+@media(max-width:550px) {
+    .cart-heading h1 {
+        font-size: 29px;
+    }
+
+    .cart-table th,
+    .cart-table td {
+        padding: 12px 9px;
+        font-size: 11px;
+    }
+
+    .cart-quantity {
+        width: 60px;
+        padding: 8px 4px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="cart-page">
+
+    <div class="cart-heading">
+        <p class="eyebrow">YOUR SELECTED ESSENTIALS</p>
+        <h1>Shopping Cart</h1>
+        <p class="muted">Review your selection before checkout.</p>
+    </div>
+
+    {% if items %}
+
+    <div class="cart-layout">
+
+        <div>
+
+            <div class="cart-panel">
+
+                <div class="cart-panel-title">
+                    Your Selection · {{ items|length }} product(s)
+                </div>
+
+                <form
+                    method="post"
+                    action="{{ url_for('update_cart') }}"
+                    id="cartUpdateForm"
+                >
+
+                    <div class="table-wrap" style="margin:0;border:0;border-radius:0">
+
+                        <table class="cart-table">
+
+                            <thead>
+                                <tr>
+                                    <th>PRODUCT</th>
+                                    <th>PRICE</th>
+                                    <th>QUANTITY</th>
+                                    <th>SUBTOTAL</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for item in items %}
+
+                                <tr class="cart-item-row">
+
+                                    <td>
+                                        <span class="cart-product-name">
+                                            {{ item.product.name }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        Rs.
+                                        <span class="unit-price">
+                                            {{ '%.2f'|format(item.product.price) }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <input
+                                            class="cart-quantity"
+                                            type="number"
+                                            name="qty_{{ item.product.id }}"
+                                            min="0"
+                                            max="{{ item.product.stock }}"
+                                            value="{{ item.quantity }}"
+                                            data-price="{{ item.product.price }}"
+                                            aria-label="Quantity for {{ item.product.name }}"
+                                            required
+                                        >
+                                    </td>
+
+                                    <td class="cart-price">
+                                        Rs.
+                                        <span class="item-subtotal">
+                                            {{ '%.2f'|format(item.subtotal) }}
+                                        </span>
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div class="cart-update">
+                        <button class="btn" type="submit">
+                            UPDATE CART ↻
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+
+            <a class="cart-continue" href="{{ url_for('index') }}">
+                ← Continue Shopping
+            </a>
+
+        </div>
+
+        <aside class="cart-summary">
+
+            <h2>Order Summary</h2>
+
+            <div class="summary-line">
+                <span>Products</span>
+                <span>{{ items|length }}</span>
+            </div>
+
+            <div class="summary-line">
+                <span>Subtotal</span>
+                <span id="summarySubtotal">
+                    Rs. {{ '%.2f'|format(total) }}
+                </span>
+            </div>
+
+            <div class="summary-line">
+                <span>Shipping</span>
+                <span>Calculated at checkout</span>
+            </div>
+
+            <div class="summary-total">
+                <span>Total</span>
+                <span id="summaryTotal">
+                    Rs. {{ '%.2f'|format(total) }}
+                </span>
+            </div>
+
+            <a
+                class="cart-checkout"
+                href="{{ url_for('checkout') }}"
+            >
+                PROCEED TO CHECKOUT →
+            </a>
+
+            <p class="cart-live-note">
+                ✦ Your selected essentials, all in one place.
+            </p>
+
+        </aside>
+
+    </div>
+
+    {% else %}
+
+    <div class="cart-empty">
+
+        <div class="cart-empty-icon">◇</div>
+
+        <h2>Your cart is waiting</h2>
+
+        <p>
+            Discover something special from the NovaCart collection.
+        </p>
+
+        <a class="btn" href="{{ url_for('index') }}">
+            EXPLORE THE COLLECTION →
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const quantityInputs = document.querySelectorAll('.cart-quantity');
+    const subtotalDisplay = document.getElementById('summarySubtotal');
+    const totalDisplay = document.getElementById('summaryTotal');
+
+    if (!quantityInputs.length || !subtotalDisplay || !totalDisplay) {
+        return;
+    }
+
+    function updateLiveTotal() {
+
+        let total = 0;
+
+        quantityInputs.forEach(function (input) {
+
+            const price = Number(input.dataset.price) || 0;
+            const quantity = Math.max(0, Number(input.value) || 0);
+            const max = Number(input.max);
+
+            const safeQuantity = Number.isFinite(max)
+                ? Math.min(quantity, max)
+                : quantity;
+
+            const subtotal = price * safeQuantity;
+
+            const row = input.closest('.cart-item-row');
+            const subtotalElement = row.querySelector('.item-subtotal');
+
+            subtotalElement.textContent = subtotal.toFixed(2);
+
+            total += subtotal;
+
+        });
+
+        const formatted = 'Rs. ' + total.toFixed(2);
+
+        subtotalDisplay.textContent = formatted;
+        totalDisplay.textContent = formatted;
+
+    }
+
+    quantityInputs.forEach(function (input) {
+        input.addEventListener('input', updateLiveTotal);
+        input.addEventListener('change', updateLiveTotal);
+    });
+
+});
+</script>
+{% endblock %}

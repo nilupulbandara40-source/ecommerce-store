@@ -1,1 +1,348 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">ALMOST THERE</p><h1>Checkout</h1><div class="form-card"><form method="post" class="stack-form"><label>Full name<input name="customer_name" required maxlength="100" placeholder="Your name"></label><label>Email address<input name="email" type="email" required maxlength="150" placeholder="you@example.com"></label><label>Delivery address<textarea name="address" required maxlength="500" rows="3" placeholder="Street, city"></textarea></label><p class="muted">Demo checkout only. No real payment is collected.</p><button class="btn">Place order</button></form></div>{% endblock %}
+
+{% extends 'base.html' %}
+
+{% block title %}Secure Checkout | NovaCart{% endblock %}
+
+{% block extra_head %}
+<style>
+.checkout-page {
+    padding: 35px 0 65px;
+}
+
+.checkout-heading {
+    margin-bottom: 30px;
+}
+
+.checkout-heading .eyebrow {
+    color: #a1844e;
+    letter-spacing: 3px;
+}
+
+.checkout-heading h1 {
+    color: #123d2c;
+    font: 800 36px Manrope, sans-serif;
+    margin: 0 0 8px;
+}
+
+.checkout-heading p {
+    color: #718078;
+    font-size: 14px;
+}
+
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 30px;
+    align-items: start;
+}
+
+.checkout-card {
+    background: #fff;
+    border: 1px solid #e9e3d8;
+    padding: 32px;
+    box-shadow: 0 12px 35px rgba(18,61,44,.05);
+}
+
+.checkout-card h2 {
+    font: 700 20px Manrope, sans-serif;
+    color: #123d2c;
+    margin: 0 0 8px;
+}
+
+.checkout-subtitle {
+    color: #839087;
+    font-size: 13px;
+    margin-bottom: 28px;
+}
+
+.checkout-form {
+    display: grid;
+    gap: 20px;
+}
+
+.checkout-form label {
+    display: grid;
+    gap: 8px;
+    color: #304d3c;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.checkout-form input,
+.checkout-form textarea {
+    width: 100%;
+    padding: 14px;
+    background: #fdfdfb;
+    border: 1px solid #e5e0d5;
+    border-radius: 3px;
+    font: 14px 'DM Sans', sans-serif;
+    color: #183d2d;
+    transition: .25s ease;
+}
+
+.checkout-form input:focus,
+.checkout-form textarea:focus {
+    outline: none;
+    border-color: #a1844e;
+    box-shadow: 0 0 0 3px rgba(161,132,78,.12);
+    background: white;
+}
+
+.checkout-form textarea {
+    resize: vertical;
+    min-height: 115px;
+}
+
+.checkout-form input::placeholder,
+.checkout-form textarea::placeholder {
+    color: #a5aca6;
+}
+
+.checkout-submit {
+    width: 100%;
+    padding: 16px;
+    background: #123d2c;
+    color: #d8bb82;
+    border: 0;
+    font: 800 13px 'DM Sans', sans-serif;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: .3s ease;
+}
+
+.checkout-submit:hover {
+    background: #b08e53;
+    color: #123d2c;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(18,61,44,.15);
+}
+
+.checkout-info {
+    background: #123d2c;
+    color: white;
+    padding: 28px;
+    position: sticky;
+    top: 110px;
+}
+
+.checkout-info h2 {
+    font: 700 21px Manrope, sans-serif;
+    margin: 0 0 20px;
+}
+
+.checkout-info-line {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 17px 0;
+    border-bottom: 1px solid rgba(255,255,255,.15);
+}
+
+.checkout-info-icon {
+    color: #d8bb82;
+    font-size: 21px;
+}
+
+.checkout-info-line strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.checkout-info-line small {
+    color: #c2d1c7;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.checkout-demo {
+    margin-top: 22px;
+    padding: 15px;
+    background: rgba(255,255,255,.08);
+    border-left: 3px solid #d8bb82;
+    color: #e2e8e1;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.checkout-back {
+    display: inline-block;
+    margin-top: 22px;
+    color: #927747;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.checkout-secure {
+    text-align: center;
+    margin-top: 17px;
+    color: #c5d5ca;
+    font-size: 11px;
+}
+
+@media(max-width:850px) {
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-info {
+        position: static;
+    }
+}
+
+@media(max-width:550px) {
+    .checkout-card {
+        padding: 21px;
+    }
+
+    .checkout-info {
+        padding: 22px;
+    }
+
+    .checkout-heading h1 {
+        font-size: 30px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="checkout-page">
+
+    <div class="checkout-heading">
+
+        <p class="eyebrow">THE FINAL STEP</p>
+
+        <h1>Complete Your Order</h1>
+
+        <p>
+            Just a few details before your NovaCart order is placed.
+        </p>
+
+    </div>
+
+    <div class="checkout-layout">
+
+        <div class="checkout-card">
+
+            <h2>Delivery Information</h2>
+
+            <p class="checkout-subtitle">
+                Please provide your details for order processing.
+            </p>
+
+            <form method="post" class="checkout-form">
+
+                <label>
+                    FULL NAME
+
+                    <input
+                        type="text"
+                        name="customer_name"
+                        required
+                        maxlength="100"
+                        autocomplete="name"
+                        placeholder="Enter your full name"
+                    >
+                </label>
+
+                <label>
+                    EMAIL ADDRESS
+
+                    <input
+                        type="email"
+                        name="email"
+                        required
+                        maxlength="150"
+                        autocomplete="email"
+                        placeholder="you@example.com"
+                    >
+                </label>
+
+                <label>
+                    DELIVERY ADDRESS
+
+                    <textarea
+                        name="address"
+                        required
+                        maxlength="500"
+                        autocomplete="street-address"
+                        rows="4"
+                        placeholder="Enter your complete delivery address"
+                    ></textarea>
+                </label>
+
+                <button class="checkout-submit" type="submit">
+                    PLACE MY ORDER →
+                </button>
+
+            </form>
+
+            <a class="checkout-back" href="{{ url_for('cart') }}">
+                ← Return to shopping cart
+            </a>
+
+        </div>
+
+        <aside class="checkout-info">
+
+            <h2>NovaCart Experience</h2>
+
+            <div class="checkout-info-line">
+
+                <span class="checkout-info-icon">✦</span>
+
+                <div>
+                    <strong>Simple Ordering</strong>
+                    <small>
+                        An easy and convenient order placement experience.
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="checkout-info-line">
+
+                <span class="checkout-info-icon">◇</span>
+
+                <div>
+                    <strong>Customer Information</strong>
+                    <small>
+                        Your delivery information is submitted with your order.
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="checkout-info-line">
+
+                <span class="checkout-info-icon">✓</span>
+
+                <div>
+                    <strong>Order Confirmation</strong>
+                    <small>
+                        View your order confirmation after successful submission.
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="checkout-demo">
+                <strong>DEMO CHECKOUT</strong>
+                <br>
+                This is an academic demonstration project.
+                No real payment is collected.
+            </div>
+
+            <p class="checkout-secure">
+                ✦ Thank you for choosing NovaCart.
+            </p>
+
+        </aside>
+
+    </div>
+
+</section>
+
+{% endblock %}
